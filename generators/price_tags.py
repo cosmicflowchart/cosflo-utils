@@ -30,10 +30,66 @@ class ProductData(TypedDict):
     price: int
 
 
+def find_max_fontsize(
+    text: str, fontname: str, line_width: float, starting_fontsize: int = 12
+) -> int:
+    """Finds the maximum fontsize that can be used to fit the given
+    text in the given line width.
+
+    Arguments:
+        text: The string to be split into lines.
+        fontname: The name of the font.
+        line_width: The max width of each line.
+        starting_fontsize: The initial fontsize.
+
+    Returns:
+        The max fontsize.
+    """
+    text_width = pdfmetrics.stringWidth(text, fontname, starting_fontsize)
+    if text_width <= line_width:
+        return starting_fontsize
+    return starting_fontsize // (text_width / line_width)
+
+
+def line_wrap_text(
+    text: str, fontname: str, fontsize: int, line_width: float
+) -> list[str]:
+    """Line wraps a string to lines of a give width. This reimplements
+    reportlab's simpleSplit function, which unfortunately does not
+    respect non-breaking spaces.
+
+    Argument:
+        text: The string to be split into lines.
+        fontname: The name of the font.
+        fontsize: The size of the font.
+        line_width: The max width of each line.
+
+    Returns:
+        A list of strings representing individual lines.
+    """
+    lines = [""]
+
+    # Only split by regular space, not by non-breaking space. (This
+    # assumes the text contains no other whitespace characters like
+    # tabs or en-spaces.)
+    for word in text.split(" "):
+        if lines[-1] == "":
+            lines[-1] = word
+        elif (
+            pdfmetrics.stringWidth(f"{lines[-1]} {word}", fontname, fontsize)
+            <= line_width
+        ):
+            lines[-1] = f"{lines[-1]} {word}"
+        else:
+            lines.append(word)
+
+    return lines
+
+
 def generate_price_tags(
     filename: str,
     products: list[ProductData],
-    tagsize=(30 * mm, 50 * mm),
+    tagsize=(30 * mm, 52 * mm),
     pagesize=A4,
     margin=10 * mm,
     padding=2 * mm,
@@ -62,6 +118,8 @@ def generate_price_tags(
     pdf_canvas.setTitle("Price Tags")
     for n_page in range(pages):
         page_data = tag_data[n_page * rows * columns : (n_page + 1) * rows * columns]
+        if len(page_data) == 0:
+            break
 
         add_mesh(pdf_canvas, parameters, tagsize=tagsize)
         for n_row in range(rows):
@@ -71,7 +129,7 @@ def generate_price_tags(
                 x = parameters["box_x"] + tagsize[0] * n_column
                 y = parameters["box_y"] + parameters["box_h"] - tagsize[1] * n_row
 
-                pdf_canvas.circle(x + tagsize[0] / 2, y - 5 * mm, 2.5 * mm)
+                pdf_canvas.circle(x + tagsize[0] / 2, y - 6 * mm, 2 * mm)
 
                 renderPDF.draw(
                     logo_drawing,
@@ -80,7 +138,15 @@ def generate_price_tags(
                     y - 30 * mm,
                 )
 
-                pdf_canvas.setFont("Exo 2.0 Bold", 12)
+                pdf_canvas.setFont(
+                    "Exo 2.0 Bold",
+                    find_max_fontsize(
+                        product["title"],
+                        "Exo 2.0 Bold",
+                        tagsize[0] - 2 * padding,
+                        starting_fontsize=12,
+                    ),
+                )
                 pdf_canvas.drawCentredString(
                     x + tagsize[0] / 2,
                     y - 38 * mm,
@@ -88,7 +154,7 @@ def generate_price_tags(
                 )
 
                 pdf_canvas.setFont("Exo 2.0 Medium", 8)
-                lines = simpleSplit(
+                lines = line_wrap_text(
                     product["subtitle"], "Exo 2.0 Medium", 8, tagsize[0] - 2 * padding
                 )
                 for k, line in enumerate(lines):
@@ -108,7 +174,7 @@ def generate_price_tags(
                 x = parameters["box_x"] + tagsize[0] * (columns - n_column - 1)
                 y = parameters["box_y"] + parameters["box_h"] - tagsize[1] * n_row
 
-                pdf_canvas.circle(x + tagsize[0] / 2, y - 5 * mm, 2.5 * mm)
+                pdf_canvas.circle(x + tagsize[0] / 2, y - 6 * mm, 2 * mm)
 
                 pdf_canvas.setFont("Exo 2.0 Bold", 8)
                 pdf_canvas.drawCentredString(
