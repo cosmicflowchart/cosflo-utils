@@ -91,6 +91,7 @@ def generate_price_tags(
     products: list[ProductData],
     tagsize=(30 * mm, 52 * mm),
     pagesize=A4,
+    cross_size=2 * mm,
     margin=10 * mm,
     padding=2 * mm,
 ):
@@ -121,7 +122,7 @@ def generate_price_tags(
         if len(page_data) == 0:
             break
 
-        add_mesh(pdf_canvas, parameters, tagsize=tagsize)
+        add_mesh(pdf_canvas, parameters, tagsize=tagsize, cross_size=cross_size)
         for n_row in range(rows):
             for n_column, product in enumerate(
                 page_data[n_row * columns : (n_row + 1) * columns]
@@ -206,7 +207,7 @@ def generate_price_tags(
                 pdf_canvas.drawCentredString(
                     x + tagsize[0] / 2,
                     y - 48 * mm,
-                    f"{product["price"]} kr",
+                    f"{product['price']} kr",
                 )
 
         if n_page < pages - 1:
@@ -235,25 +236,22 @@ def add_mesh(
     pdf_canvas: canvas.Canvas,
     parameters: PageParameters,
     tagsize=(30 * mm, 50 * mm),
+    cross_size=2 * mm,
 ):
     pdf_canvas.setLineWidth(0.4)
-    pdf_canvas.rect(
-        parameters["box_x"],
-        parameters["box_y"],
-        parameters["box_w"],
-        parameters["box_h"],
-    )
-    for i in range(1, parameters["columns"]):
-        pdf_canvas.line(
-            parameters["box_x"] + i * tagsize[0],
-            parameters["box_y"],
-            parameters["box_x"] + i * tagsize[0],
-            parameters["box_y"] + parameters["box_h"],
-        )
-    for i in range(1, parameters["rows"]):
-        pdf_canvas.line(
-            parameters["box_x"],
-            parameters["box_y"] + i * tagsize[1],
-            parameters["box_x"] + parameters["box_w"],
-            parameters["box_y"] + i * tagsize[1],
-        )
+    for i in range(parameters["columns"] + 1):
+        for j in range(parameters["rows"] + 1):
+            pdf_canvas.line(
+                parameters["box_x"] + i * tagsize[0],
+                parameters["box_y"] + j * tagsize[1] - cross_size,
+                parameters["box_x"] + i * tagsize[0],
+                parameters["box_y"] + j * tagsize[1] + cross_size,
+            )
+    for i in range(parameters["rows"] + 1):
+        for j in range(parameters["columns"] + 1):
+            pdf_canvas.line(
+                parameters["box_x"] + j * tagsize[0] - cross_size,
+                parameters["box_y"] + i * tagsize[1],
+                parameters["box_x"] + j * tagsize[0] + cross_size,
+                parameters["box_y"] + i * tagsize[1],
+            )
