@@ -5,10 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "click==8.1.0",
     "jupyter>=1.1.1",
     "qrcode[pil]>=8.0",
     "reportlab>=4.2.5",
     "svglib>=1.5.1",
+    "typer>=0.15.3",
 ]
 
 [tool.ruff]
