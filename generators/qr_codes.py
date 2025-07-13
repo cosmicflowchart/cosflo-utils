@@ -1,8 +1,4 @@
-from decimal import Decimal
-from io import BytesIO
-
 import qrcode
-from qrcode.image.styles import moduledrawers
 from qrcode.image.svg import SvgPathImage
 
 

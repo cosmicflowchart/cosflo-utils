@@ -1,10 +1,10 @@
 from io import BytesIO
 from typing import TypedDict
 
+from pypdf import PdfReader, PdfWriter
 from reportlab.graphics import renderPDF
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.lib.utils import simpleSplit
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -84,6 +84,144 @@ def line_wrap_text(
             lines.append(word)
 
     return lines
+
+
+def generate_backing_cards(
+    filename: str,
+    products: list[ProductData],
+    pagesize=A4,
+    padding=4 * mm,
+    text_color="#e5ccff",
+):
+    for fontname, fontfile in [
+        ("Exo 2.0 Regular", "Exo2.0-Regular.ttf"),
+        ("Exo 2.0 Medium", "Exo2.0-Medium.ttf"),
+        ("Exo 2.0 Bold", "Exo2.0-Bold.ttf"),
+    ]:
+        pdfmetrics.registerFont(TTFont(fontname, f"assets/fonts/{fontfile}"))
+
+    data = [product for product in products for _ in range(product["quantity"])]
+    url_format = "cosmicflowch.art/p/{sku}"
+    url_format_qr = "https://cosmicflowch.art/p/{sku}"
+
+    x0, y0 = 23.5 * mm, pagesize[1] - 19 * mm
+    width, height = 53 * mm, 85 * mm
+    gap = 2 * mm
+
+    rows, columns = 3, 3
+    pages = len(data) // (rows * columns) + 1
+    pdf_canvas = canvas.Canvas(filename, pagesize=A4)
+    pdf_canvas.setTitle("Backing Cards")
+    text_color_rgb = tuple(int(text_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+
+    for n_page in range(pages):
+        page_data = data[n_page * rows * columns : (n_page + 1) * rows * columns]
+        if len(page_data) == 0:
+            break
+
+        pdf_canvas.setFillColorRGB(*text_color_rgb)
+        for n_row in range(rows):
+            for n_column, product in enumerate(
+                page_data[n_row * columns : (n_row + 1) * columns]
+            ):
+                x = x0 + (width + gap) * n_column
+                y = y0 - (height + gap) * n_row
+
+                pdf_canvas.setFont(
+                    "Exo 2.0 Bold",
+                    find_max_fontsize(
+                        product["title"],
+                        "Exo 2.0 Bold",
+                        width - 2 * padding,
+                        starting_fontsize=20,
+                    ),
+                )
+                pdf_canvas.drawCentredString(
+                    x + width / 2,
+                    y - 10 * mm,
+                    product["title"],
+                )
+
+                pdf_canvas.setFont("Exo 2.0 Medium", 12)
+                lines = line_wrap_text(
+                    product["subtitle"], "Exo 2.0 Medium", 12, width - 2 * padding
+                )
+                for k, line in enumerate(lines):
+                    pdf_canvas.drawCentredString(
+                        x + width / 2,
+                        y - 15 * mm - k * 4 * mm,
+                        line,
+                    )
+
+        pdf_canvas.showPage()
+
+        pdf_canvas.setFillColorRGB(*text_color_rgb)
+        for n_row in range(rows):
+            for n_column, product in enumerate(
+                page_data[n_row * columns : (n_row + 1) * columns]
+            ):
+                x = x0 + (width + gap) * (columns - n_column - 1)
+                y = y0 - (height + gap) * n_row
+
+                pdf_canvas.setFont("Exo 2.0 Bold", 10)
+                pdf_canvas.drawCentredString(
+                    x + width / 2,
+                    y - 38 * mm,
+                    "Scan for more info",
+                )
+
+                qr = BytesIO()
+                generate_qrcode(qr, url_format_qr.format(sku=product["sku"].lower()))
+                qr.seek(0)
+                qr_bytes = qr.read()
+                qr = BytesIO(
+                    qr_bytes.replace(
+                        b'fill="#000000"', f'fill="{text_color}"'.encode("utf-8")
+                    )
+                )
+                qr_drawing = svg2rlg(qr)
+                qr_scale = 30 * mm / qr_drawing.height
+                qr_drawing.scale(sx=qr_scale, sy=qr_scale)
+                renderPDF.draw(
+                    qr_drawing,
+                    pdf_canvas,
+                    x + width / 2 - qr_drawing.width * qr_scale / 2,
+                    y - qr_drawing.height * qr_scale - 40 * mm,
+                )
+                pdf_canvas.setFont("Exo 2.0 Regular", 7)
+                pdf_canvas.drawCentredString(
+                    x + width / 2,
+                    y - qr_drawing.height * qr_scale - 43 * mm,
+                    url_format.format(sku=product["sku"].lower()),
+                )
+
+                pdf_canvas.setFont("Exo 2.0 Bold", 16)
+                pdf_canvas.drawCentredString(
+                    x + width / 2,
+                    y - 80 * mm,
+                    f"{product['price']} kr",
+                )
+
+        if n_page < pages - 1:
+            pdf_canvas.showPage()
+
+    pdf_canvas.save()
+
+    reader = PdfReader(filename)
+    writer = PdfWriter()
+    writer.add_metadata({"/Title": "Backing Cards"})
+    template_files = [
+        "assets/templates/backing-cards-front.pdf",
+        "assets/templates/backing-cards-back.pdf",
+    ]
+
+    for k, page in enumerate(reader.pages):
+        template = PdfReader(template_files[k % len(template_files)]).pages[0]
+        template.merge_page(page)
+        writer.add_page(template)
+
+    with open(filename, "wb") as f:
+        writer.write(f)
 
 
 def generate_price_tags(
@@ -218,7 +356,7 @@ def generate_price_tags(
 
 def calculate_page_parameters(
     tagsize=(60 * mm, 20 * mm), pagesize=A4, margin=10 * mm
-) -> (int, int):
+) -> tuple[int, int]:
     parameters = {
         "columns": int((pagesize[0] - 2 * margin) // tagsize[0]),
         "rows": int((pagesize[1] - 2 * margin) // tagsize[1]),

@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "click==8.1.0",
-    "jupyter>=1.1.1",
+    "marimo>=0.14.10",
+    "pypdf>=5.7.0",
     "qrcode[pil]>=8.0",
     "reportlab>=4.2.5",
     "svglib>=1.5.1",
@@ -34,3 +35,6 @@ ignore = [
 [tool.ruff.format]
 indent-style = "space"
 quote-style = "double"
+
+[tool.marimo.runtime]
+pythonpath = ["."]
