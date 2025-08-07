@@ -152,12 +152,6 @@ def _(products):
 
 
 @app.cell
-def _(datetime):
-    datetime.now().date().isoformat()
-    return
-
-
-@app.cell
 def _(datetime, generate_price_tags, products):
     now = datetime.now()
     generate_price_tags(f"price-tags-{now:%Y-%m-%d}.pdf", products)

@@ -2,6 +2,7 @@ from io import BytesIO
 from typing import TypedDict
 
 from pypdf import PdfReader, PdfWriter
+from qrcode import ERROR_CORRECT_H, ERROR_CORRECT_L
 from reportlab.graphics import renderPDF
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -171,7 +172,11 @@ def generate_backing_cards(
                 )
 
                 qr = BytesIO()
-                generate_qrcode(qr, url_format_qr.format(sku=product["sku"].lower()))
+                generate_qrcode(
+                    qr,
+                    url_format_qr.format(sku=product["sku"].lower()),
+                    error_correction=ERROR_CORRECT_H,
+                )
                 qr.seek(0)
                 qr_bytes = qr.read()
                 qr = BytesIO(

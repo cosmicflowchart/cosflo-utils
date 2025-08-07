@@ -20,22 +20,11 @@ def _():
 @app.cell
 def _():
     products = [
-        {"sku": "AC0101", "title": "Sunflower", "subtitle": "Flower Pin", "price": 100, "quantity": 6},
-        {"sku": "AC0102", "title": "Daisy", "subtitle": "Flower Pin", "price": 100, "quantity": 6},
-        {"sku": "AC0111", "title": "Rainbow", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0112", "title": "Bi Pride", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0113", "title": "Trans Pride", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0114", "title": "Pan Pride", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0115", "title": "NB Pride", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0116", "title": "Ace Pride", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0117", "title": "Lesbian Pride", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
-        {"sku": "AC0111", "title": "Rainbow", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
-        {"sku": "AC0112", "title": "Bi Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
-        {"sku": "AC0113", "title": "Trans Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
-        {"sku": "AC0114", "title": "Pan Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
-        {"sku": "AC0115", "title": "NB Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
-        {"sku": "AC0116", "title": "Ace Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
-        {"sku": "AC0117", "title": "Lesbian Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
+        {"sku": "AC0118", "title": "Genderqueer", "subtitle": "Flower Pin", "price": 100, "quantity": 4},
+        {"sku": "AC0118", "title": "Genderqueer", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 2},
+        {"sku": "AC0111", "title": "Rainbow", "subtitle": "Flower Pin", "price": 100, "quantity": 1},
+        {"sku": "AC0111", "title": "Rainbow", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 1},
+        {"sku": "AC0113", "title": "Trans Pride", "subtitle": "Flower Pin with\u00A0Pronouns", "price": 120, "quantity": 1},
     ]
     return (products,)
 
