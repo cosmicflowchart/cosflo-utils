@@ -8,6 +8,7 @@ dependencies = [
     "click==8.1.0",
     "marimo>=0.14.10",
     "pypdf>=5.7.0",
+    "python-lsp-server>=1.13.0",
     "qrcode[pil]>=8.0",
     "reportlab>=4.2.5",
     "requests>=2.32.4",
