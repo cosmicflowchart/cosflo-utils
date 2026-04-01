@@ -2,7 +2,7 @@ from io import BytesIO
 from typing import TypedDict
 
 from pypdf import PdfReader, PdfWriter
-from qrcode import ERROR_CORRECT_H, ERROR_CORRECT_L
+from qrcode import ERROR_CORRECT_H
 from reportlab.graphics import renderPDF
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -282,20 +282,30 @@ def generate_price_tags(
                     y - 30 * mm,
                 )
 
-                pdf_canvas.setFont(
-                    "Exo 2.0 Bold",
-                    find_max_fontsize(
-                        product["title"],
-                        "Exo 2.0 Bold",
-                        tagsize[0] - 2 * padding,
-                        starting_fontsize=12,
-                    ),
-                )
-                pdf_canvas.drawCentredString(
-                    x + tagsize[0] / 2,
-                    y - 38 * mm,
+                fontsize = find_max_fontsize(
                     product["title"],
+                    "Exo 2.0 Bold",
+                    tagsize[0] - 2 * padding,
+                    starting_fontsize=12,
                 )
+                if fontsize >= 7:
+                    pdf_canvas.setFont("Exo 2.0 Bold", fontsize)
+                    pdf_canvas.drawCentredString(
+                        x + tagsize[0] / 2,
+                        y - 38 * mm,
+                        product["title"],
+                    )
+                else:
+                    pdf_canvas.setFont("Exo 2.0 Bold", 7)
+                    lines = line_wrap_text(
+                        product["title"], "Exo 2.0 Bold", 7, tagsize[0] - 2 * padding
+                    )
+                    for k, line in enumerate(lines, start=-len(lines) + 1):
+                        pdf_canvas.drawCentredString(
+                            x + tagsize[0] / 2,
+                            y - 38 * mm - k * 3 * mm,
+                            line,
+                        )
 
                 pdf_canvas.setFont("Exo 2.0 Medium", 8)
                 lines = line_wrap_text(
